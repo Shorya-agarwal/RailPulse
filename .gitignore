@@ -1,0 +1,23 @@
+# Java
+target/
+*.class
+*.jar
+*.war
+.mvn/
+.idea/
+*.iml
+
+# Python
+__pycache__/
+*.pyc
+venv/
+.env
+
+# Node
+node_modules/
+build/
+dist/
+.DS_Store
+
+# Docker
+.docker/
