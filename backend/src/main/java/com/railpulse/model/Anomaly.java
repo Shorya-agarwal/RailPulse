@@ -7,6 +7,8 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.locationtech.jts.geom.Point;
 
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.railpulse.config.PointSerializer;
 import java.time.Instant;
 import java.util.UUID;
 
@@ -40,6 +42,7 @@ public class Anomaly {
     private Instant detectedAt;
     
     @Column(name = "location", columnDefinition = "geometry(Point, 4326)")
+    @JsonSerialize(using = PointSerializer.class)
     private Point location;
     
     @Column(name = "speed_kmh")
