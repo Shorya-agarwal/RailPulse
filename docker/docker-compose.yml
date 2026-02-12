@@ -32,7 +32,7 @@ services:
       POSTGRES_PASSWORD: railpulse123
       POSTGRES_DB: railpulse
     ports:
-      - "5432:5432"
+      - "5433:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./init-postgres.sql:/docker-entrypoint-initdb.d/init.sql

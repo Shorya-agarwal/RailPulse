@@ -1,0 +1,12 @@
+{
+    "route": "Austin_to_Houston",
+    "waypoints": [
+      {"lat": 30.2672, "lon": -97.7431, "name": "Austin_Station"},
+      {"lat": 30.25, "lon": -97.74, "name": "Sharp_Curve_Entry"},
+      {"lat": 30.26, "lon": -97.75, "name": "Sharp_Curve_Exit"},
+      {"lat": 29.7604, "lon": -95.3698, "name": "Houston_Station"}
+    ],
+    "sharp_curves": [
+      {"lat": 30.255, "lon": -97.745, "radius_km": 0.5, "max_safe_speed": 60}
+    ]
+  }
