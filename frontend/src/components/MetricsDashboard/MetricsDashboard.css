@@ -1,0 +1,52 @@
+.metrics-dashboard {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 1rem;
+    padding: 1.5rem;
+    background: #f5f7fa;
+  }
+  
+  .metric-card {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    text-align: center;
+    transition: transform 0.2s;
+  }
+  
+  .metric-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+  }
+  
+  .metric-value {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #667eea;
+  }
+  
+  .metric-card.success .metric-value {
+    color: #48bb78;
+  }
+  
+  .metric-card.warning .metric-value {
+    color: #ed8936;
+  }
+  
+  .metric-card.danger .metric-value {
+    color: #f56565;
+  }
+  
+  .metric-label {
+    font-size: 0.9rem;
+    color: #718096;
+    margin-top: 0.5rem;
+    font-weight: 500;
+  }
+  
+  .metrics-loading {
+    padding: 2rem;
+    text-align: center;
+    color: #718096;
+  }

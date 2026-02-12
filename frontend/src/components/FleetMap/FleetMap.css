@@ -1,0 +1,119 @@
+.fleet-map-container {
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+  }
+  
+  .map-header {
+    padding: 1rem 1.5rem;
+    background: #f7fafc;
+    border-bottom: 2px solid #e2e8f0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  
+  .map-header h2 {
+    margin: 0;
+    color: #2d3748;
+  }
+  
+  .map-legend {
+    display: flex;
+    gap: 1.5rem;
+  }
+  
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.9rem;
+    color: #4a5568;
+  }
+  
+  .legend-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    border: 2px solid white;
+  }
+  
+  .legend-dot.moving {
+    background: #48bb78;
+  }
+  
+  .legend-dot.stopped {
+    background: #ed8936;
+  }
+  
+  .legend-dot.danger {
+    background: #f56565;
+  }
+  
+  .leaflet-map {
+    border-radius: 0 0 8px 8px;
+  }
+  
+  .train-popup {
+    min-width: 200px;
+  }
+  
+  .train-popup h3 {
+    margin: 0 0 0.75rem 0;
+    color: #2d3748;
+    font-size: 1.1rem;
+  }
+  
+  .popup-detail {
+    margin: 0.5rem 0;
+    font-size: 0.9rem;
+    color: #4a5568;
+  }
+  
+  .popup-detail strong {
+    color: #2d3748;
+    margin-right: 0.5rem;
+  }
+  
+  .status-badge {
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-weight: 600;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+  }
+  
+  .status-badge.moving {
+    background: #c6f6d5;
+    color: #22543d;
+  }
+  
+  .status-badge.stopped {
+    background: #feebc8;
+    color: #7c2d12;
+  }
+  
+  .status-badge.danger {
+    background: #fed7d7;
+    color: #742a2a;
+  }
+  
+  .no-data-overlay {
+    position: absolute;
+    top: 60px;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255, 255, 255, 0.9);
+    z-index: 1000;
+  }
+  
+  .no-data-overlay p {
+    font-size: 1.2rem;
+    color: #718096;
+    font-weight: 600;
+  }
