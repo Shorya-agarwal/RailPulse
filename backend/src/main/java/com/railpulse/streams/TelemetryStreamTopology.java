@@ -3,6 +3,7 @@ package com.railpulse.streams;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.railpulse.model.Telemetry;
+import com.railpulse.streams.service.ArchivalService; 
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.common.serialization.Serdes;
 import org.apache.kafka.streams.StreamsBuilder;
@@ -17,14 +18,17 @@ import org.springframework.stereotype.Component;
 public class TelemetryStreamTopology {
     
     private final GeospatialProcessor geospatialProcessor;
+    private final ArchivalService archivalService;
     private final ObjectMapper objectMapper;
     
     @Value("${spring.kafka.consumer.topic:telemetry-stream}")
     private String inputTopic;
     
     @Autowired
-    public TelemetryStreamTopology(GeospatialProcessor geospatialProcessor) {
+    public TelemetryStreamTopology(GeospatialProcessor geospatialProcessor,
+                                    ArchivalService archivalService) { 
         this.geospatialProcessor = geospatialProcessor;
+        this.archivalService = archivalService;
         this.objectMapper = new ObjectMapper();
         this.objectMapper.registerModule(new JavaTimeModule());
     }
@@ -54,7 +58,11 @@ public class TelemetryStreamTopology {
             // Process telemetry (anomaly detection + fleet status update)
             .foreach((key, telemetry) -> {
                 try {
+                     // Hot path: Anomaly detection + fleet status
                     geospatialProcessor.processTelemetry(telemetry);
+                    
+                     // Cold path: Archive to MinIO
+                    archivalService.addToBuffer(telemetry);
                 } catch (Exception e) {
                     log.error("Error processing telemetry for train {}: {}", 
                              key, e.getMessage(), e);

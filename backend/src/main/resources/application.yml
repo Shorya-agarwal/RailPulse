@@ -48,3 +48,10 @@ railpulse:
   archival:
     batch-size: 1000
     interval-seconds: 60
+
+minio:
+  endpoint: http://localhost:9000
+  access-key: minioadmin
+  secret-key: minioadmin123
+  bucket-name: railpulse-lake
+  region: us-east-1
