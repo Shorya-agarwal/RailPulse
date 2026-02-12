@@ -1,4 +1,4 @@
-package main.java.com.railpulse.streams;
+package com.railpulse.streams;
 
 public class TelemetryStreamTopology {
     

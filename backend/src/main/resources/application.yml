@@ -1,0 +1,57 @@
+spring:
+  application:
+    name: railpulse-backend
+  
+  # Database configuration
+  datasource:
+    url: jdbc:postgresql://localhost:5432/railpulse
+    username: railpulse
+    password: railpulse123
+    driver-class-name: org.postgresql.Driver
+  
+  jpa:
+    hibernate:
+      ddl-auto: validate  # Don't auto-create tables (we use init-postgres.sql)
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.spatial.dialect.postgis.PostgisPG95Dialect
+        format_sql: true
+  
+  # Kafka configuration
+  kafka:
+    bootstrap-servers: localhost:9092
+    consumer:
+      group-id: railpulse-processor
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+    
+    streams:
+      application-id: railpulse-streams
+      properties:
+        default.key.serde: org.apache.kafka.common.serialization.Serdes$StringSerde
+        default.value.serde: org.apache.kafka.common.serialization.Serdes$StringSerde
+        commit.interval.ms: 1000
+
+# Logging
+logging:
+  level:
+    com.railpulse: INFO
+    org.apache.kafka: WARN
+    org.hibernate: WARN
+
+# Custom application properties
+railpulse:
+  # Anomaly detection thresholds
+  vibration:
+    critical-threshold: 8.0
+    warning-threshold: 6.0
+  
+  speed:
+    curve-threshold: 60.0  # km/h
+  
+  # Data archival settings
+  archival:
+    batch-size: 1000
+    interval-seconds: 60

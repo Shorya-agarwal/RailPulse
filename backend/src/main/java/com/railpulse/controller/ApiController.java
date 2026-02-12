@@ -1,4 +1,4 @@
-package main.java.com.railpulse.controller;
+package com.railpulse.controller;
 
 public class ApiController {
     

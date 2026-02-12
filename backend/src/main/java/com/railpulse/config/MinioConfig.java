@@ -1,4 +1,4 @@
-package main.java.com.railpulse.config;
+package com.railpulse.config;
 
 public class MinioConfig {
     
