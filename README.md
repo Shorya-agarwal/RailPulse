@@ -10,6 +10,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Build Status](https://img.shields.io/badge/Build-Passing-success)]()
 [![Code Coverage](https://img.shields.io/badge/Coverage-85%25-brightgreen)]()
+![CI/CD Pipeline](https://github.com/Shorya-agarwal/RailPulse/actions/workflows/ci.yml/badge.svg)
 
 > **Production-grade event-driven system for detecting safety anomalies in railway fleets using distributed streaming, geospatial correlation, and real-time visualization.**
 
@@ -270,9 +271,9 @@ STOMP: Connected to server
 ```
 ## 🧠 Core Algorithms & Design Decisions
 ### 1. Geospatial Anomaly Detection
-*Challenge*: Detect derailment risk by correlating GPS coordinates with track topology.
+**Challenge**: Detect derailment risk by correlating GPS coordinates with track topology.
 
-*Implementation*:
+**Implementation**:
 ```bash
 // GeospatialProcessor.java
 private void checkCurveSpeedAnomaly(Telemetry telemetry) {
@@ -309,9 +310,9 @@ Why This Approach:
 Alternative Considered: Real-time PostGIS queries ( ST_Distance) → Rejected due to added DB roundtrip latency
 
 ### 2. Custom JSON Serialization for PostGIS Geometry
-*Challenge*: Spring Boot's Jackson serializer can't natively handle JTS Point objects (causes infinite recursion: Point → Envelope → Point → ...).
+**Challenge**: Spring Boot's Jackson serializer can't natively handle JTS Point objects (causes infinite recursion: Point → Envelope → Point → ...).
 
-*Solution*: Custom serializer that extracts coordinates:
+**Solution**: Custom serializer that extracts coordinates:
 
 ```java
 // PointSerializer.java
@@ -333,9 +334,9 @@ public class PointSerializer extends JsonSerializer<Point> {
 ```
 
 ### 3. Batch Archival Pattern (Lambda Architecture Cold Path)
-*Challenge*: Archive 10k events/sec to MinIO without blocking real-time processing.
+**Challenge**: Archive 10k events/sec to MinIO without blocking real-time processing.
 
-*Implementation*:
+**Implementation**:
 ```java
 @Service
 public class ArchivalService {
@@ -373,16 +374,16 @@ public class ArchivalService {
     }
 }
 ```
-*Why This Works:*
+**Why This Works:**
 
 * ✅ Reduced I/O: 1000 records/write vs. 10,000 writes/sec.
 * ✅ Thread-Safe: ReentrantLock prevents race conditions.
 * ✅ Data Partitioning: Date-based keys enable efficient Hive/Spark queries later.
 
 ### 4. WebSocket State Sync (Frontend)
-*Challenge*: Merge REST-fetched historical data with WebSocket-streamed live updates.
+**Challenge**: Merge REST-fetched historical data with WebSocket-streamed live updates.
 
-*Solution*:
+**Solution**:
 ```java
 // useWebSocket.ts
 const [anomalies, setAnomalies] = useState<Anomaly[]>([]);
@@ -426,12 +427,12 @@ useEffect(() => {
     *   Reduces initial page load time
 ## 🚧 Known Limitations & Future Enhancements
 ### Current Limitations
-1. *Single-Node Deployment*: Kafka/Postgres run on 1 instance (not production-ready for fault tolerance)
-2. *Geofence Hardcoding*: Sharp curve coordinates in Java code (should be in database table)
-3.* No Authentication:* REST/WebSocket endpoints are open (add Spring Security + JWT)
-4. *Limited ML*: Anomaly detection uses threshold rules (could enhance with ML models)
+1. **Single-Node Deployment**: Kafka/Postgres run on 1 instance (not production-ready for fault tolerance)
+2. **Geofence Hardcoding**: Sharp curve coordinates in Java code (should be in database table)
+3.** No Authentication:* *REST/WebSocket endpoints are open (add Spring Security + JWT)
+4. **Limited ML**: Anomaly detection uses threshold rules (could enhance with ML models)
 ### Roadmap
-*Phase 1: Scalability (Q3 2026)*
+**Phase 1: Scalability (Q3 2026)**
 
 *   Multi-broker Kafka cluster (3 nodes, replication factor 3)
 
@@ -439,7 +440,7 @@ useEffect(() => {
 
 *   Horizontal pod autoscaling (Kubernetes deployment)
 
-*Phase 2: Intelligence (Q4 2026)*
+**Phase 2: Intelligence (Q4 2026)**
 
 *   LSTM model for predictive maintenance (forecast failures 30 min ahead)
 
@@ -447,7 +448,7 @@ useEffect(() => {
 
 *   Real-time geofence updates (move curve data to PostGIS track_geofences table)
 
-*Phase 3: Production Readiness (Q1 2027)*
+**Phase 3: Production Readiness (Q1 2027)**
 
 *   OAuth 2.0 authentication (Spring Security + Keycloak)
 
@@ -458,3 +459,5 @@ useEffect(() => {
 *   Distributed tracing (OpenTelemetry + Jaeger)
 
 *   CI/CD pipeline (GitHub Actions → Docker Hub → K8s rolling deploy)
+
+## Shorya Agarwal | Systems Engineer & C++ Developer | MS CE @Texas A&M University  | [![LinkedIn](https://img.shields.io/badge/LinkedIn-Connect-blue?style=flat&logo=linkedin)](https://www.linkedin.com/in/shoryaag/)

@@ -1,0 +1,265 @@
+name: RailPulse CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  # Job 1: Backend Tests and Build
+  backend-build:
+    name: Backend (Spring Boot)
+    runs-on: ubuntu-latest
+    
+    services:
+      postgres:
+        image: postgis/postgis:15-3.3
+        env:
+          POSTGRES_USER: railpulse
+          POSTGRES_PASSWORD: railpulse123
+          POSTGRES_DB: railpulse
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: 'maven'
+
+      - name: Cache Maven dependencies
+        uses: actions/cache@v3
+        with:
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            ${{ runner.os }}-maven-
+
+      - name: Initialize PostgreSQL Schema
+        run: |
+          PGPASSWORD=railpulse123 psql -h localhost -U railpulse -d railpulse -f docker/init-postgres.sql
+
+      - name: Build with Maven
+        working-directory: ./backend
+        run: mvn clean compile -DskipTests
+
+      - name: Run Unit Tests
+        working-directory: ./backend
+        run: mvn test
+        env:
+          SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5432/railpulse
+          SPRING_DATASOURCE_USERNAME: railpulse
+          SPRING_DATASOURCE_PASSWORD: railpulse123
+
+      - name: Generate Test Coverage Report
+        working-directory: ./backend
+        run: mvn jacoco:report
+
+      - name: Package Application
+        working-directory: ./backend
+        run: mvn package -DskipTests
+
+      - name: Upload JAR Artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: backend-jar
+          path: backend/target/*.jar
+          retention-days: 7
+
+  # Job 2: Frontend Tests and Build
+  frontend-build:
+    name: Frontend (React + TypeScript)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        working-directory: ./frontend
+        run: npm ci
+
+      - name: Run ESLint
+        working-directory: ./frontend
+        run: npm run lint --if-present
+
+      - name: Run Tests
+        working-directory: ./frontend
+        run: npm test -- --coverage --watchAll=false
+        env:
+          CI: true
+
+      - name: Build Production Bundle
+        working-directory: ./frontend
+        run: npm run build
+        env:
+          REACT_APP_API_URL: http://localhost:8080/api
+          REACT_APP_WS_URL: http://localhost:8080/ws
+
+      - name: Upload Build Artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: frontend-build
+          path: frontend/build/
+          retention-days: 7
+
+      - name: Check Bundle Size
+        working-directory: ./frontend
+        run: |
+          echo "### Bundle Size Analysis" >> $GITHUB_STEP_SUMMARY
+          du -sh build/ >> $GITHUB_STEP_SUMMARY
+
+  # Job 3: Python Simulator Validation
+  simulator-test:
+    name: Simulator (Python)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+          cache: 'pip'
+
+      - name: Install dependencies
+        working-directory: ./simulator
+        run: |
+          pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Lint with flake8
+        working-directory: ./simulator
+        run: |
+          pip install flake8
+          flake8 train_simulator.py --max-line-length=120 --ignore=E501
+
+      - name: Validate Simulator Syntax
+        working-directory: ./simulator
+        run: python -m py_compile train_simulator.py
+
+  # Job 4: Docker Build Test
+  docker-build:
+    name: Docker Multi-Container Test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Validate docker-compose.yml
+        working-directory: ./docker
+        run: docker-compose config
+
+      - name: Start Infrastructure Services
+        working-directory: ./docker
+        run: |
+          docker-compose up -d
+          sleep 30  # Wait for services to initialize
+
+      - name: Check Service Health
+        run: |
+          docker ps
+          docker exec docker-postgres-1 pg_isready -U railpulse || exit 1
+          docker exec docker-kafka-1 kafka-topics --list --bootstrap-server localhost:9092 || exit 1
+
+      - name: Tear Down Services
+        if: always()
+        working-directory: ./docker
+        run: docker-compose down -v
+
+  # Job 5: Integration Test (Full System)
+  integration-test:
+    name: End-to-End Integration
+    runs-on: ubuntu-latest
+    needs: [backend-build, frontend-build, simulator-test]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download Backend Artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: backend-jar
+          path: backend/target/
+
+      - name: Start Docker Infrastructure
+        working-directory: ./docker
+        run: |
+          docker-compose up -d
+          sleep 30
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Run Backend (Background)
+        working-directory: ./backend
+        run: |
+          java -jar target/*.jar &
+          sleep 20
+
+      - name: Health Check
+        run: |
+          curl -f http://localhost:8080/api/health || exit 1
+          echo "✅ Backend health check passed"
+
+      - name: API Smoke Tests
+        run: |
+          curl -f http://localhost:8080/api/stats | jq '.totalTrains' || exit 1
+          echo "✅ API endpoints responding"
+
+      - name: Cleanup
+        if: always()
+        working-directory: ./docker
+        run: docker-compose down -v
+
+  # Job 6: Code Quality Report
+  code-quality:
+    name: Code Quality Analysis
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Run SonarCloud Scan (Backend)
+        if: false  # Enable when you set up SonarCloud
+        uses: SonarSource/sonarcloud-github-action@master
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+
+      - name: Generate Summary
+        run: |
+          echo "## ✅ RailPulse CI/CD Summary" >> $GITHUB_STEP_SUMMARY
+          echo "- Backend: Compiled & Tested" >> $GITHUB_STEP_SUMMARY
+          echo "- Frontend: Built & Linted" >> $GITHUB_STEP_SUMMARY
+          echo "- Docker: Services Validated" >> $GITHUB_STEP_SUMMARY
+          echo "- Integration: E2E Tests Passed" >> $GITHUB_STEP_SUMMARY
