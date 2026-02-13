@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { MapContainer, TileLayer, Marker, Popup, CircleMarker } from 'react-leaflet';
+import { MapContainer, TileLayer, Popup, CircleMarker } from 'react-leaflet';
 import L from 'leaflet';
 import { api } from '../../services/api';
 import { FleetStatus } from '../../types';
@@ -132,10 +132,10 @@ const FleetMap: React.FC<FleetMapProps> = ({ liveUpdates }) => {
             <CircleMarker
               key={train.trainId}
               center={coords}
-              radius={8}
+              radius={selectedTrain === train.trainId ? 12 : 8}  // ← Bigger if selected
               fillColor={getMarkerColor(train.status)}
-              color="#fff"
-              weight={2}
+              color={selectedTrain === train.trainId ? "#000" : "#fff"}  // ← Black border if selected
+              weight={selectedTrain === train.trainId ? 3 : 2}  // ← Thicker border
               opacity={1}
               fillOpacity={0.8}
               eventHandlers={{

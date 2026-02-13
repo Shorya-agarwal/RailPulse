@@ -61,5 +61,11 @@ export const useWebSocket = () => {
     setAnomalies([]);
   }, []);
 
-  return { anomalies, fleetUpdates, isConnected, clearAnomalies };
+  const disconnect = useCallback(() => {
+    if (client) {
+      client.deactivate();
+      setIsConnected(false);
+    }
+  }, [client]);
+  return { anomalies, fleetUpdates, isConnected, clearAnomalies, disconnect };
 };
