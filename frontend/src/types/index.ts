@@ -18,9 +18,9 @@ export interface Anomaly {
     lastSeen: string;
     currentSpeed: number;
     currentLocation?: {
-      type: string;
-      coordinates: [number, number];
-    };
+      lat: number;
+      lon: number;
+    } | null;  // ← Update this to match new serializer format
     vibrationLevel: number;
     engineTemp: number;
     status: 'MOVING' | 'STOPPED' | 'DANGER';

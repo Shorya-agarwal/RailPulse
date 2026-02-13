@@ -59,9 +59,21 @@ const FleetMap: React.FC<FleetMapProps> = ({ liveUpdates }) => {
 
   // Extract coordinates from PostGIS geometry
   const getCoordinates = (train: FleetStatus): [number, number] | null => {
-    if (!train.currentLocation?.coordinates) return null;
-    const [lon, lat] = train.currentLocation.coordinates;
-    return [lat, lon];
+    if (!train.currentLocation) return null;
+    
+    // Check if it's the new serialized format {lat, lon}
+    if (typeof train.currentLocation === 'object' && 'lat' in train.currentLocation && 'lon' in train.currentLocation) {
+      const location = train.currentLocation as { lat: number; lon: number };
+      return [location.lat, location.lon];
+    }
+    
+    // Fallback for old format (shouldn't happen but safe)
+    if ('coordinates' in train.currentLocation && Array.isArray((train.currentLocation as any).coordinates)) {
+      const [lon, lat] = (train.currentLocation as any).coordinates;
+      return [lat, lon];
+    }
+    
+    return null;
   };
 
   // Get marker color based on status
